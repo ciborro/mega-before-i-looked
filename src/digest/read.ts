@@ -75,3 +75,23 @@ export const readNight: ReadNight = (runsDir, night) => {
   }
   return { night, ...digest(text) };
 };
+
+// Run lines per status for one night, counted with parseLine; bad lines are skipped.
+export function countStatuses(text: string): Record<RunStatus, number> {
+  const counts: Record<RunStatus, number> = { ok: 0, retry: 0, fail: 0 };
+  for (const raw of text.split('\n')) {
+    if (raw.trim() === '') continue;
+    const line = parseLine(raw);
+    if (line !== null) counts[line.status]++;
+  }
+  return counts;
+}
+
+// null when the night has no readable file.
+export function countNight(runsDir: string, night: string): Record<RunStatus, number> | null {
+  try {
+    return countStatuses(readFileSync(join(runsDir, `${night}.jsonl`), 'utf8'));
+  } catch {
+    return null;
+  }
+}
